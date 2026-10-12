@@ -15,8 +15,8 @@ USER_ID = os.environ["DISCORD_USER_ID"]
 STATE_FILE = Path("monitor_state.txt")
 
 
+
 def notify(message):
-    """Send a Discord message that pings your account."""
     payload = json.dumps({
         "content": f"<@{USER_ID}> {message}",
         "allowed_mentions": {
@@ -27,12 +27,23 @@ def notify(message):
     request = urllib.request.Request(
         WEBHOOK,
         data=payload,
-        headers={"Content-Type": "application/json"},
+        headers={
+            "Content-Type": "application/json",
+            "User-Agent": "YouTubeHandleMonitor/1.0"
+        },
         method="POST",
     )
 
-    with urllib.request.urlopen(request, timeout=20) as response:
-        print(f"Discord notification sent: HTTP {response.status}")
+    try:
+        with urllib.request.urlopen(request, timeout=20) as response:
+            print(f"Discord notification sent: HTTP {response.status}")
+
+    except urllib.error.HTTPError as error:
+        details = error.read().decode("utf-8", errors="replace")
+        print(f"Discord HTTP error: {error.code}")
+        print(f"Discord response: {details}")
+        raise
+
 
 
 def check_handle():

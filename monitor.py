@@ -13,6 +13,9 @@ STATE_FILE = Path("monitor_state.txt")
 USER_ID = os.environ["DISCORD_USER_ID"]
 
 def notify(message):
+    "content": f"<@{USER_ID}> {message}",
+    "allowed_mentions": {"users": [USER_ID]}
+    
     payload = json.dumps({"content": message}).encode("utf-8")
     request = urllib.request.Request(
         WEBHOOK,

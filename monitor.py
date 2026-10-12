@@ -110,5 +110,4 @@ def main():
 
 
 if __name__ == "__main__":
-    notify("✅ Test ping! Your YouTube handle monitor can reach Discord.")
     main()

@@ -16,6 +16,14 @@ jobs:
       - name: Get repository files
         uses: actions/checkout@v4
 
+      - name: Restore previous check state
+        uses: actions/cache@v4
+        with:
+          path: monitor_state.txt
+          key: handle-state-${{ github.run_id }}
+          restore-keys: |
+            handle-state-
+
       - name: Check YouTube handle
         run: python monitor.py
         env:

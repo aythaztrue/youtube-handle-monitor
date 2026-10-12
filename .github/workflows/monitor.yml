@@ -1,3 +1,4 @@
+
 name: Monitor YouTube handle
 
 "on":
@@ -5,9 +6,17 @@ name: Monitor YouTube handle
   schedule:
     - cron: "0,30 * * * *"
 
+permissions:
+  contents: read
+
 jobs:
   check-handle:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - run: echo "Workflow is running"
+      - name: Get repository files
+        uses: actions/checkout@v4
+
+      - name: Check YouTube handle
+        run: python monitor.py
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}

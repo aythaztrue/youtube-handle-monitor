@@ -3,10 +3,12 @@ import json
 import os
 import urllib.request
 import urllib.error
+from pathlib import Path
 
 HANDLE = "a2u"
 URL = f"https://www.youtube.com/@{HANDLE}"
 WEBHOOK = os.environ["DISCORD_WEBHOOK_URL"]
+STATE_FILE = Path("monitor_state.txt")
 
 
 def notify(message):
@@ -21,29 +23,51 @@ def notify(message):
         print(f"Discord notification sent: HTTP {response.status}")
 
 
-request = urllib.request.Request(
-    URL,
-    headers={"User-Agent": "Mozilla/5.0"},
-)
+def check_handle():
+    request = urllib.request.Request(
+        URL,
+        headers={"User-Agent": "Mozilla/5.0"},
+    )
 
-try:
-    with urllib.request.urlopen(request, timeout=30) as response:
-        html = response.read().decode("utf-8", errors="replace").lower()
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            html = response.read().decode("utf-8", errors="replace").lower()
 
-    if "channelid" in html or '"externalid"' in html:
-        print(f"@{HANDLE} appears to belong to a channel.")
-    else:
-        print(f"Could not confirm whether @{HANDLE} is available.")
-        print("No alert sent because the result is inconclusive.")
+        if "this page isn't available" in html:
+            return "POSSIBLE_OPENING"
 
-except urllib.error.HTTPError as error:
-    if error.code == 404:
+        if '"externalid"' in html or "channelid" in html:
+            return "CHANNEL_FOUND"
+
+        return "UNKNOWN"
+
+    except urllib.error.HTTPError as error:
+        if error.code == 404:
+            return "POSSIBLE_OPENING"
+        print(f"YouTube returned HTTP {error.code}; result is unknown.")
+        return "UNKNOWN"
+
+    except Exception as error:
+        print(f"Could not check YouTube: {error}")
+        return "UNKNOWN"
+
+
+previous = STATE_FILE.read_text().strip() if STATE_FILE.exists() else ""
+current = check_handle()
+
+print(f"Handle @{HANDLE}: {current}")
+
+if current == "UNKNOWN":
+    print("Inconclusive result; no alert sent.")
+elif current != previous:
+    if current == "POSSIBLE_OPENING":
         notify(
-            f"🔎 YouTube returned a 404 for @{HANDLE}. "
-            "This does NOT confirm availability. Check manually: "
-            "https://www.youtube.com/@a2u"
+            f"🔎 @{HANDLE} may be available!\n"
+            "This is NOT confirmation. Check YouTube Studio:\n"
+            "https://studio.youtube.com/"
         )
     else:
-        raise RuntimeError(
-            f"YouTube returned HTTP {error.code}; status is unknown."
-        )
+        print(f"@{HANDLE} appears to resolve to a channel.")
+    STATE_FILE.write_text(current + "\n")
+else:
+    print("No change since the previous saved result.")

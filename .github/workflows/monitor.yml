@@ -3,18 +3,11 @@ name: Monitor YouTube handle
 "on":
   workflow_dispatch:
   schedule:
-    
-cron: "0,30 * * * *"
+    - cron: "0,30 * * * *"
 
 jobs:
   check-handle:
     runs-on: ubuntu-latest
     steps:
-      
-uses: actions/checkout@v4
-
-      
-name: Check handle
-      env:
-        DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-      run: python monitor.py
+      - uses: actions/checkout@v4
+      - run: echo "Workflow is running"

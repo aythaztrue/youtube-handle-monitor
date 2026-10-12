@@ -10,6 +10,7 @@ URL = f"https://www.youtube.com/@{HANDLE}"
 WEBHOOK = os.environ["DISCORD_WEBHOOK_URL"]
 STATE_FILE = Path("monitor_state.txt")
 
+USER_ID = os.environ["DISCORD_USER_ID"]
 
 def notify(message):
     payload = json.dumps({"content": message}).encode("utf-8")
